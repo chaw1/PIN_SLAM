@@ -1,0 +1,65 @@
+setting:
+  name: "lane_4d"
+  output_root: "./experiments"
+  pc_path: "./data/your_lane_data"  # 修改为你的数据路径
+  # pose_path: "./data/your_poses.txt"  # 如果有GT pose可以提供
+
+process:
+  min_range_m: 0.5        # 降低最小距离，保留近处车道线
+  max_range_m: 100.0      # 车道线通常在较远处
+  vox_down_m: 0.05        # 更精细的下采样 (原来0.08)
+  min_z_m: -5.0           # 保留地面和车道线
+  max_z_m: 5.0            # 过滤高空噪点
+
+sampler:
+  surface_sample_range_m: 0.15   # 车道线窄，减小采样范围
+  surface_sample_n: 6            # 增加表面采样
+  free_sample_begin_ratio: 0.2
+  free_sample_end_dist_m: 0.8
+  free_front_sample_n: 2
+
+neuralpoints:
+  voxel_size_m: 0.2       # 更密集的神经点网格 (原来0.4)
+  feature_dim: 16         # 增加特征维度以捕获细节 (原来8)
+  query_nn_k: 8           # 增加近邻数量
+  search_alpha: 0.25
+  weighted_first: False
+
+decoder:
+  freeze_after_frame: 80  # 延迟冻结以充分学习稀疏特征
+
+loss:
+  main_loss_type: bce
+  sigma_sigmoid_m: 0.05   # 更精细的SDF边界
+  loss_weight_on: True
+  dist_weight_scale: 0.9
+  ekional_loss_on: True
+  weight_e: 0.3           # 降低eikonal权重
+
+continual:
+  batch_size_new_sample: 2000
+  pool_capacity: 3e7
+
+tracker:
+  source_vox_down_m: 0.3  # 更精细的tracking
+  iter_n: 150             # 增加迭代次数
+  GM_grad: 0.08           # 更严格的梯度阈值
+  GM_dist: 0.15           # 更严格的距离阈值
+
+pgo:
+  pgo_on: False           # 如果tracking不稳定，先关闭PGO测试
+  pgo_freq_frame: 30
+  context_cosdist: 0.25
+
+optimizer:
+  batch_size: 20480       # 增加batch size
+
+eval:
+  o3d_vis_on: True        # ⚠️ 强烈建议开启可视化！
+  silence_log: False      # 开启日志以便调试
+  mesh_freq_frame: 100    # 降低mesh重建频率节省资源
+  mesh_min_nn: 5          # ⚠️ 关键：降低最小近邻要求 (原来9)
+  mc_res_m: 0.08          # 更精细的marching cubes分辨率
+  save_map: True
+  save_mesh: True
+  save_merged_pc: True
